@@ -100,11 +100,9 @@
         .status-section { flex: 1 1 300px; display: flex; flex-direction: column; align-items: center; text-align: center; height: fit-content; }
         .ip-box { background-color: #202225; padding: 12px; border-radius: 5px; font-family: monospace; margin-bottom: 15px; width: 100%; border: 1px solid var(--accent-color); color: #fff; font-size: 1.1em; box-sizing: border-box; }
         
-        .status-badge { width: 100%; border-radius: 5px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-
-        #status-text { font-weight: bold; font-size: 1.3em; margin-bottom: 20px; }
-        .status-online { color: var(--online-color); }
-        .status-offline { color: var(--offline-color); }
+        /* 修正：自作バッジのスタイル */
+        .status-badge-area { background: #202225; padding: 12px; border-radius: 5px; width: 100%; margin-bottom: 20px; border-left: 5px solid var(--accent-color); text-align: left; box-sizing: border-box; }
+        #status-text-display { font-weight: bold; font-size: 1.1em; }
 
         .chart-container { position: relative; width: 160px; height: 160px; margin-bottom: 20px; }
         svg.chart-svg { transform: rotate(-90deg); }
@@ -168,9 +166,10 @@
         <h2>Server Status</h2>
         <div class="ip-box">youserver.xgames.jp</div>
         
-        <img src="https://api.mcsrvstat.us/2/youserver.xgames.jp.png" alt="Server Status Badge" class="status-badge">
-
-        <div id="status-text">Connecting...</div>
+        <div id="status-badge-area" class="status-badge-area">
+            <div id="status-text-display">読み込み中...</div>
+            <div style="font-size: 0.8em; color: var(--text-muted); margin-top: 2px;">Minecraft: Java Edition</div>
+        </div>
 
         <div class="chart-container">
             <svg class="chart-svg" width="160" height="160" viewBox="0 0 160 160">
@@ -195,12 +194,16 @@
         try {
             const res = await fetch(API_URL);
             const data = await res.json();
-            const statusText = document.getElementById('status-text');
+            const statusDisplay = document.getElementById('status-text-display');
+            const badgeArea = document.getElementById('status-badge-area');
             const progressBar = document.getElementById('progress-bar');
 
             if (data.online) {
-                statusText.innerText = "● ONLINE";
-                statusText.className = "status-online";
+                // オンライン時の表示設定
+                statusDisplay.innerText = "● ONLINE";
+                statusDisplay.style.color = "var(--online-color)";
+                badgeArea.style.borderLeftColor = "var(--online-color)";
+                
                 document.getElementById('player-count').innerText = data.players.online;
                 document.getElementById('max-players').innerText = `/ ${data.players.max}`;
                 document.getElementById('version').innerText = data.version;
@@ -208,16 +211,20 @@
                 const ratio = data.players.online / data.players.max;
                 progressBar.style.strokeDashoffset = CIRCUMFERENCE - (ratio * CIRCUMFERENCE);
             } else {
-                statusText.innerText = "● OFFLINE";
-                statusText.className = "status-offline";
+                // オフライン時の表示設定
+                statusDisplay.innerText = "● OFFLINE";
+                statusDisplay.style.color = "var(--offline-color)";
+                badgeArea.style.borderLeftColor = "var(--offline-color)";
+                
                 progressBar.style.strokeDashoffset = CIRCUMFERENCE;
+                document.getElementById('player-count').innerText = "0";
             }
         } catch (e) {
-            document.getElementById('status-text').innerText = "取得エラー";
+            document.getElementById('status-text-display').innerText = "取得エラー";
         }
     }
     updateStatus();
-    setInterval(updateStatus, 60000);
+    setInterval(updateStatus, 60000); // 1分ごとに更新
 </script>
 </body>
 </html>
