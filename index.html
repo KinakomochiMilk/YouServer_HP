@@ -183,43 +183,50 @@
 </div>
 
 <script>
-    const SERVER_DOMAIN = "copy-cloudy.gl.joinmc.link";
-    const API_URL = `https://api.mcsrvstat.us/2/${SERVER_DOMAIN}`;
+    const SERVER_IP = "copy-cloudy.gl.joinmc.link";
     const CIRCUMFERENCE = 440;
 
     async function updateStatus() {
+        const statusDisplay = document.getElementById('status-text-display');
+        const badgeArea = document.getElementById('status-badge-area');
+        const progressBar = document.getElementById('progress-bar');
+        const playerCountEl = document.getElementById('player-count');
+        const maxPlayersEl = document.getElementById('max-players');
+        const versionEl = document.getElementById('version');
+
         try {
-            const res = await fetch(API_URL);
+            const res = await fetch(`https://mcapi.us/server/status?ip=${SERVER_IP}`);
             const data = await res.json();
-            const statusDisplay = document.getElementById('status-text-display');
-            const badgeArea = document.getElementById('status-badge-area');
-            const progressBar = document.getElementById('progress-bar');
 
             if (data.online) {
                 statusDisplay.innerText = "● ONLINE";
                 statusDisplay.style.color = "var(--online-color)";
                 badgeArea.style.borderLeftColor = "var(--online-color)";
                 
-                document.getElementById('player-count').innerText = data.players.online;
-                document.getElementById('max-players').innerText = `/ ${data.players.max}`;
-                document.getElementById('version').innerText = data.version;
+                playerCountEl.innerText = data.players.now;
+                maxPlayersEl.innerText = `/ ${data.players.max}`;
+                versionEl.innerText = data.server.name.replace(/[^0-9.]/g, '') || "1.20.1";
 
-                const ratio = data.players.online / data.players.max;
+                const ratio = data.players.now / data.players.max;
                 progressBar.style.strokeDashoffset = CIRCUMFERENCE - (ratio * CIRCUMFERENCE);
             } else {
-                statusDisplay.innerText = "● OFFLINE";
-                statusDisplay.style.color = "var(--offline-color)";
-                badgeArea.style.borderLeftColor = "var(--offline-color)";
-                
-                progressBar.style.strokeDashoffset = CIRCUMFERENCE;
-                document.getElementById('player-count').innerText = "0";
+                throw new Error("Server Offline");
             }
         } catch (e) {
-            document.getElementById('status-text-display').innerText = "取得エラー";
+            statusDisplay.innerText = "● OFFLINE / ERR";
+            statusDisplay.style.color = "var(--offline-color)";
+            badgeArea.style.borderLeftColor = "var(--offline-color)";
+            
+            playerCountEl.innerText = "0";
+            maxPlayersEl.innerText = "/ 0";
+            versionEl.innerText = "---";
+            progressBar.style.strokeDashoffset = CIRCUMFERENCE;
+            console.log("API Fetch Error:", e);
         }
     }
+
     updateStatus();
-    setInterval(updateStatus, 60000); 
+    setInterval(updateStatus, 60000);
 </script>
 </body>
 </html>
